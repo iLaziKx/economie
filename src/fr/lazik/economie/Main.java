@@ -51,7 +51,7 @@ public class Main extends JavaPlugin implements Listener {
 		config.addDefault("prix.experience", 500);
 		config.options().copyDefaults(true);
 		saveConfig();
-		
+
 		log.info("[E-conomie] Le plugin est correctement charge !");
 		Bukkit.getServer().getPluginManager().registerEvents(this, this);
 		inventory = Bukkit.createInventory(null, 36, "§4ceci est un tuto");
@@ -77,54 +77,55 @@ public class Main extends JavaPlugin implements Listener {
 
 		Entity e = event.getEntity();
 		float gain = 0;
-		
+
 		if (e.getLastDamageCause() instanceof EntityDamageByEntityEvent) {
 			EntityDamageByEntityEvent nEvent = (EntityDamageByEntityEvent) e.getLastDamageCause();
 			Player player = (Player) nEvent.getDamager();
 			if (nEvent.getDamager() instanceof Player) {
-				player.sendMessage(e.getType().toString() + config.getStringList("gain.CREEPER"));
-				if (config.getStringList("gain").contains(e.getType().toString())) {
+				if (config.contains("gain." + e.getType().toString())) {
+					gain = config.getInt("gain." + e.getType().toString());
 					player.sendMessage("Vous avez tué un(e) " + e.getName() + " et gagné " + gain + "€");
 				}
+
 			}
 
 		}
 	}
-	
-	//intraction avec les panneaux
-	//creer un panneau si un text particulier et écrie
+
+	// intraction avec les panneaux
+	// creer un panneau si un text particulier et écrie
 	@EventHandler
-    public void onSignChange(SignChangeEvent event) {
-        Player player = event.getPlayer();
-        String[] lines = event.getLines();
-        if(lines[0].equalsIgnoreCase("[Tuto Epicube]")) {
-            event.setLine(0, "");
-            event.setLine(1, "§8Epicube");
-            event.setLine(2, "§4Look mon stuf");
-            event.setLine(3, "");
-            player.sendMessage("§8[§7Epicube§8] §3Panneau correctement creer !");
-        }
-    }
-	
-	 @EventHandler
-	    public void onPlayerInteract(PlayerInteractEvent event) {
-	        if(event.getClickedBlock().getState() instanceof Sign) {
-	            Sign sign = (Sign) event.getClickedBlock().getState();
-	            String[] lines = sign.getLines();
-	            if(lines[1].equalsIgnoreCase("§8Epicube")) {
-	                if(lines[2].equalsIgnoreCase("§4Look mon stuf")) {
-	                Player player = event.getPlayer();
-	                 ItemStack spe = new ItemStack(Material.DIAMOND, 48);
-	                 ItemMeta spem = spe.getItemMeta();
-	                 spem.setDisplayName("§8[§7Epicube§8] §4Tuto Epicube");
-	                 spe.setItemMeta(spem);
-	                 //inventory.addItem(new ItemStack[] { spe });
-	                 inventory.setItem(10, spe);
-	                    player.openInventory(inventory);
-	      
-	            }
-	        }
-	    }
-	 }
+	public void onSignChange(SignChangeEvent event) {
+		Player player = event.getPlayer();
+		String[] lines = event.getLines();
+		if (lines[0].equalsIgnoreCase("[Tuto Epicube]")) {
+			event.setLine(0, "");
+			event.setLine(1, "§8Epicube");
+			event.setLine(2, "§4Look mon stuf");
+			event.setLine(3, "");
+			player.sendMessage("§8[§7Epicube§8] §3Panneau correctement creer !");
+		}
+	}
+
+	@EventHandler
+	public void onPlayerInteract(PlayerInteractEvent event) {
+		if (event.getClickedBlock().getState() instanceof Sign) {
+			Sign sign = (Sign) event.getClickedBlock().getState();
+			String[] lines = sign.getLines();
+			if (lines[1].equalsIgnoreCase("§8Epicube")) {
+				if (lines[2].equalsIgnoreCase("§4Look mon stuf")) {
+					Player player = event.getPlayer();
+					ItemStack spe = new ItemStack(Material.DIAMOND, 48);
+					ItemMeta spem = spe.getItemMeta();
+					spem.setDisplayName("§8[§7Epicube§8] §4Tuto Epicube");
+					spe.setItemMeta(spem);
+					inventory.addItem(new ItemStack[] { spe });
+					inventory.setItem(10, spe);
+					player.openInventory(inventory);
+
+				}
+			}
+		}
+	}
 
 }
