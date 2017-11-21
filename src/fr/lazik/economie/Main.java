@@ -48,6 +48,7 @@ public class Main extends JavaPlugin implements Listener { // Nous rajoutons cec
 			if (nEvent.getDamager() instanceof Player) {
 				Player p = (Player)nEvent.getDamager();
 				p.sendMessage("J'ai tué " + e.getName());
+				p.sendMessage("J'ai tué " + e.getName());				
 			}
 		}
 	}	
