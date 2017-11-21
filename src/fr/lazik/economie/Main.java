@@ -37,19 +37,60 @@ public class Main extends JavaPlugin implements Listener { // Nous rajoutons cec
 	@EventHandler
 	public void onPlayerLeave(PlayerQuitEvent e) {
 		e.setQuitMessage(ChatColor.GRAY + "[" + ChatColor.DARK_GREEN + "-" + ChatColor.GRAY + "]" + ChatColor.RED
-				+ e.getPlayer().getName()); // Nous modifions le message de deconnexion ! 
+				+ e.getPlayer().getName()); // Nous modifions le message de deconnexion !
 	}
 
 	@EventHandler
 	public void onEntityDeath(EntityDeathEvent event) {
 		Entity e = event.getEntity();
+		float gain = 0;
 		if (e.getLastDamageCause() instanceof EntityDamageByEntityEvent) {
 			EntityDamageByEntityEvent nEvent = (EntityDamageByEntityEvent) e.getLastDamageCause();
 			if (nEvent.getDamager() instanceof Player) {
-				Player p = (Player)nEvent.getDamager();
-				p.sendMessage("J'ai tué " + e.getName());
-				p.sendMessage("J'ai tué " + e.getName());				
+				Player p = (Player) nEvent.getDamager();
+				switch (e.getType()) {
+				case ZOMBIE:
+					gain = 1;
+					break;
+				case SKELETON :
+					gain = 2;
+					break;
+				case SPIDER :
+					gain = 1;
+					break;
+				case CREEPER:
+					gain = 3;
+					break;
+				case SLIME :
+					gain = 1;
+					break;
+				case GHAST :
+					gain = 5;
+					break;
+				case PIG_ZOMBIE:
+					gain = 3;
+					break;
+				case ENDERMAN:
+					gain = 2;
+					break;
+				case BLAZE :
+					gain = 2;
+					break;
+				case WITCH :
+					gain = 5;
+					break;
+				case WITHER :
+					gain = 50;
+					break;
+				case WITHER_SKELETON:
+					gain = 10;
+					break;
+				default:
+					gain = 0;
+					break;
+				}
+				p.sendMessage("Vous avez tué un(e) " + e.getType() + " et gagné " + gain + "€");
 			}
 		}
-	}	
+	}
 }
