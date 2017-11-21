@@ -3,19 +3,27 @@ package fr.lazik.economie;
 import java.util.logging.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
+import org.bukkit.block.Sign;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class Main extends JavaPlugin implements Listener {
 
+	public static Inventory inventory;
 	public Logger log = (Logger) java.util.logging.Logger.getLogger("Minecraft");
 	FileConfiguration config = getConfig();
 
@@ -43,8 +51,10 @@ public class Main extends JavaPlugin implements Listener {
 		config.addDefault("prix.experience", 500);
 		config.options().copyDefaults(true);
 		saveConfig();
+		
 		log.info("[E-conomie] Le plugin est correctement charge !");
 		Bukkit.getServer().getPluginManager().registerEvents(this, this);
+		inventory = Bukkit.createInventory(null, 36, "§4ceci est un tuto");
 	}
 
 	public void onDisable() {
@@ -80,5 +90,42 @@ public class Main extends JavaPlugin implements Listener {
 
 		}
 	}
+	
+
+	//intraction avec les panneaux
+	//creer un panneau si un text particulier et écrie
+	@EventHandler
+    public void onSignChange(SignChangeEvent event) {
+        Player player = event.getPlayer();
+        String[] lines = event.getLines();
+        if(lines[0].equalsIgnoreCase("[Tuto Epicube]")) {
+            event.setLine(0, "");
+            event.setLine(1, "§8Epicube");
+            event.setLine(2, "§4Look mon stuf");
+            event.setLine(3, "");
+            player.sendMessage("§8[§7Epicube§8] §3Panneau correctement creer !");
+        }
+    }
+	
+	 @EventHandler
+	    public void onPlayerInteract(PlayerInteractEvent event) {
+	        if(event.getClickedBlock().getState() instanceof Sign) {
+	            Sign sign = (Sign) event.getClickedBlock().getState();
+	            String[] lines = sign.getLines();
+	            if(lines[1].equalsIgnoreCase("§8Epicube")) {
+	                if(lines[2].equalsIgnoreCase("§4Look mon stuf")) {
+	                Player player = event.getPlayer();
+	                 ItemStack spe = new ItemStack(Material.DIAMOND, 48);
+	                 ItemMeta spem = spe.getItemMeta();
+	                 spem.setDisplayName("§8[§7Epicube§8] §4Tuto Epicube");
+	                 spe.setItemMeta(spem);
+	                 //inventory.addItem(new ItemStack[] { spe });
+	                 inventory.setItem(10, spe);
+	                    player.openInventory(inventory);
+	      
+	            }
+	        }
+	    }
+	 }
 
 }
