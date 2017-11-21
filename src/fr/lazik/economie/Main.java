@@ -91,7 +91,6 @@ public class Main extends JavaPlugin implements Listener {
 		}
 	}
 	
-	// bite
 	//intraction avec les panneaux
 	//creer un panneau si un text particulier et écrie
 	@EventHandler
@@ -103,7 +102,6 @@ public class Main extends JavaPlugin implements Listener {
             event.setLine(1, "§8Epicube");
             event.setLine(2, "§4Look mon stuf");
             event.setLine(3, "");
-            player.sendMessage("§8[§7Epicube§8] §3Panneau correctement creer !");
             player.sendMessage("§8[§7Epicube§8] §3Panneau correctement creer !");
         }
     }
