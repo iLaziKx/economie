@@ -62,8 +62,11 @@ public class Main extends JavaPlugin implements Listener {
 
 	@EventHandler // Ceci vas annoncer l'event ! (OBLIGATOIRE !)
 	public void onPlayerJoin(PlayerJoinEvent e) { // Nous annoncons le type d'event ! Par exemple : PlayerChatEvent...
-		e.setJoinMessage(ChatColor.GRAY + "[" + ChatColor.DARK_RED + "+" + ChatColor.GRAY + "]" + ChatColor.RED
-				+ e.getPlayer().getName()); // Nous modifions le message de connexion !
+		Player p = e.getPlayer();
+		config.addDefault("compte." + p.getName(), 0);
+		config.options().copyDefaults(true);
+		saveConfig();
+		p.sendMessage("Bienvenue sur le serveur, vous avez " + config.getInt("compte." + p.getName()) + "€ sur votre compte");
 	}
 
 	@EventHandler
@@ -85,6 +88,8 @@ public class Main extends JavaPlugin implements Listener {
 				if (config.contains("gain." + e.getType().toString())) {
 					gain = config.getInt("gain." + e.getType().toString());
 					player.sendMessage("Vous avez tué un(e) " + e.getName() + " et gagné " + gain + "€");
+					int montant = config.getInt("compte." + player.getName());
+					config.set("compte." +  player.getName(), montant + gain);
 				}
 
 			}
