@@ -4,12 +4,14 @@ import java.util.logging.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
@@ -18,7 +20,6 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class Main extends JavaPlugin implements Listener {
@@ -41,14 +42,38 @@ public class Main extends JavaPlugin implements Listener {
 		config.addDefault("gain.WITHER", 50);
 		config.addDefault("gain.WITHER_SKELETON", 10);
 
-		config.addDefault("prix.ironBlock", 20);
-		config.addDefault("prix.goldBlock", 50);
-		config.addDefault("prix.DiamondBlock", 150);
-		config.addDefault("prix.coalBlock", 5);
-		config.addDefault("prix.bread", 2);
-		config.addDefault("prix.cake", 20);
-		config.addDefault("prix.potatos", 16);
-		config.addDefault("prix.experience", 500);
+		config.addDefault("prix.IRON_BLOCK.material", "IRON_BLOCK");
+		config.addDefault("prix.IRON_BLOCK.name", "block iron");
+		config.addDefault("prix.IRON_BLOCK.prix", 20);
+		config.addDefault("prix.IRON_BLOCK.quantite", 1);
+		config.addDefault("prix.GOLD_BLOCK.material", "GOLD_BLOCK");
+		config.addDefault("prix.GOLD_BLOCK.name", "Block gold");
+		config.addDefault("prix.GOLD_BLOCK.prix", 50);
+		config.addDefault("prix.GOLD_BLOCK.quantite", 1);
+		config.addDefault("prix.DIAMOND_BLOCK.material", "DIAMOND_BLOCK");
+		config.addDefault("prix.DIAMOND_BLOCK.name", "Block diamant");
+		config.addDefault("prix.DIAMOND_BLOCK.prix", 150);
+		config.addDefault("prix.DIAMOND_BLOCK.quantite", 1);
+		config.addDefault("prix.COAL_BLOCK.material", "COAL_BLOCK");
+		config.addDefault("prix.COAL_BLOCK.name", "block charbon");
+		config.addDefault("prix.COAL_BLOCK.prix", 5);
+		config.addDefault("prix.COAL_BLOCK.quantite", 1);
+		config.addDefault("prix.BREAD.material", "BREAD");
+		config.addDefault("prix.BREAD.name", "pain");
+		config.addDefault("prix.BREAD.prix", 2);
+		config.addDefault("prix.BREAD.quantite", 1);
+		config.addDefault("prix.CAKE_BLOCK.material", "CAKE_BLOCK");
+		config.addDefault("prix.CAKE_BLOCK.name", "gateau");
+		config.addDefault("prix.CAKE_BLOCK.prix", 20);
+		config.addDefault("prix.CAKE_BLOCK.quantite", 1);
+		config.addDefault("prix.POTATO.material", "POTATO");
+		config.addDefault("prix.POTATO.name", "patate");
+		config.addDefault("prix.POTATO.prix", 16);
+		config.addDefault("prix.POTATO.quantite", 32);
+		config.addDefault("prix.experience.material", "experience");
+		config.addDefault("prix.experience.name", "experience");
+		config.addDefault("prix.experience.prix", 500);
+		config.addDefault("prix.experience.quantite", 1395);
 		config.options().copyDefaults(true);
 		saveConfig();
 
@@ -66,7 +91,8 @@ public class Main extends JavaPlugin implements Listener {
 		config.addDefault("compte." + p.getName(), 0);
 		config.options().copyDefaults(true);
 		saveConfig();
-		p.sendMessage("Bienvenue sur le serveur, vous avez " + config.getInt("compte." + p.getName()) + "€ sur votre compte");
+		p.sendMessage(
+				"§8[§CE-conomie§8] §ABienvenue sur le serveur, vous avez " + config.getInt("compte." + p.getName()) + "€ sur votre compte");
 	}
 
 	@EventHandler
@@ -79,7 +105,7 @@ public class Main extends JavaPlugin implements Listener {
 	public void onEntityDeath(EntityDeathEvent event) {
 
 		Entity e = event.getEntity();
-		float gain = 0;
+		double gain = 0;
 
 		if (e.getLastDamageCause() instanceof EntityDamageByEntityEvent) {
 			EntityDamageByEntityEvent nEvent = (EntityDamageByEntityEvent) e.getLastDamageCause();
@@ -87,9 +113,10 @@ public class Main extends JavaPlugin implements Listener {
 			if (nEvent.getDamager() instanceof Player) {
 				if (config.contains("gain." + e.getType().toString())) {
 					gain = config.getInt("gain." + e.getType().toString());
-					player.sendMessage("Vous avez tué un(e) " + e.getName() + " et gagné " + gain + "€");
+					player.sendMessage("§8[§CE-conomie§8] §AVous avez tué un(e) " + e.getName() + " et gagné " + gain + "€");
 					int montant = config.getInt("compte." + player.getName());
-					config.set("compte." +  player.getName(), montant + gain);
+					config.set("compte." + player.getName(), montant + gain);
+					saveConfig();
 				}
 
 			}
@@ -104,44 +131,44 @@ public class Main extends JavaPlugin implements Listener {
 		Player player = event.getPlayer();
 		String[] lines = event.getLines();
 		String item = lines[0];
-		if(!item.equals("") && player.isOp()) {
-			
-		if (config.contains("prix." + item)) {
-			event.setLine(0, "-"+item+"-");
-			event.setLine(1, item);
-			event.setLine(2, "§3Acheter du " + item);
-			event.setLine(3, "pour"+ config.getInt("prix." + item));
-			player.sendMessage("§8[§7Epicube§8] §3Panneau correctement creer !");
-		}
+		if (!item.equals("") && player.isOp()) {
+			if (config.contains("prix." + item)) {
+				event.setLine(0, "§C[E-conomie]");
+				event.setLine(1, item);
+				event.setLine(2, "§1Du " + config.getString("prix." + item + ".name") + " pour");
+				event.setLine(3, "§1" + config.getInt("prix." + item + ".prix") + " €");
+				player.sendMessage("§8[§CE-conomie§8] §APanneau correctement creer !");
+			}
 		}
 	}
 
 	@EventHandler
 	public void onPlayerInteract(PlayerInteractEvent event) {
-		if (event.getClickedBlock().getState() instanceof Sign) {
-			Sign sign = (Sign) event.getClickedBlock().getState();
-			Player player = event.getPlayer();
-			String[] lines = sign.getLines();
-			Material material = Material.getMaterial(getConfig().getString("prix." + lines[0].split("-")[1]).toUpperCase());
-			player.sendMessage("la");
-			
-			
-			//if (config.contains("prix." + lines[0].split("-")[1])) {
-					//Material material = Material.getMaterial(getConfig().getString("prix." + lines[0].split("-")[1]).toUpperCase());
-					//player.sendMessage(lines[0].split("-")[1].toUpperCase());
-					//ItemStack spe = new ItemStack(Material.BREAD,1);
-					//player.getInventory().addItem(spe);
-					/*ItemMeta spem = spe.getItemMeta();
-					spem.setDisplayName("§8[§7Epicube§8] §4Tuto Epicube");
-					spe.setItemMeta(spem);
-					inventory.addItem(new ItemStack[] { spe });
-					inventory.setItem(10, spe);
-					inventory.addItem(new ItemStack[] { spe });
-					player.openInventory(inventory);*/
+		Player player = event.getPlayer();
+		if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+			Block b = event.getClickedBlock();
+			if ((b.getType() == Material.SIGN_POST) || (b.getType() == Material.WALL_SIGN)) {
+				Sign s = (Sign) b.getState();
+				String item = s.getLine(1);
+				if (config.contains("prix." + item + ".material")) {
+					if (config.getInt("prix." + item + ".prix") <= config.getInt("compte." + player.getName())) {
+						Material material = Material.getMaterial(config.getString("prix." + item + ".material"));
+						ItemStack is = new ItemStack(material, config.getInt("prix." + item + ".quantite"));
+						double montant = config.getInt("compte." + player.getName());
+						config.set("compte." + player.getName(), (montant - config.getDouble("prix." + item + ".prix")));
+						saveConfig();
+						player.getInventory().addItem(is);
+						player.sendMessage("§8[§CE-conomie§8] §AVous avez acheter " + config.getString("prix." + item + ".name") + " pour "
+								+ config.getString("prix." + item + ".prix") + " €");
+					} else {
+						player.sendMessage("§8[§CE-conomie§8] §CVous n'avez pas assez d'argent");
+					}
+				}
 
-				
-			//}
+			}
+
 		}
+
 	}
 
 }
