@@ -103,11 +103,11 @@ public class Main extends JavaPlugin implements Listener {
 	public void onSignChange(SignChangeEvent event) {
 		Player player = event.getPlayer();
 		String[] lines = event.getLines();
-		String item = "";
-		if(item != "") {
-			item = lines[0];
+		String item = lines[0];
+		if(!item.equals("") && player.isOp()) {
+			
 		if (config.contains("prix." + item)) {
-			event.setLine(0, "");
+			event.setLine(0, "-"+item+"-");
 			event.setLine(1, item);
 			event.setLine(2, "§3Acheter du " + item);
 			event.setLine(3, "pour"+ config.getInt("prix." + item));
@@ -120,12 +120,17 @@ public class Main extends JavaPlugin implements Listener {
 	public void onPlayerInteract(PlayerInteractEvent event) {
 		if (event.getClickedBlock().getState() instanceof Sign) {
 			Sign sign = (Sign) event.getClickedBlock().getState();
+			Player player = event.getPlayer();
 			String[] lines = sign.getLines();
-			if (lines[1].equalsIgnoreCase("§8Boulangerie")) {
-				if (lines[2].equalsIgnoreCase("§4Prend du pain")) {
-					Player player = event.getPlayer();
-					ItemStack spe = new ItemStack(Material.BREAD, 1);
-					player.getInventory().addItem(spe);
+			Material material = Material.getMaterial(getConfig().getString("prix." + lines[0].split("-")[1]).toUpperCase());
+			player.sendMessage("la");
+			
+			
+			//if (config.contains("prix." + lines[0].split("-")[1])) {
+					//Material material = Material.getMaterial(getConfig().getString("prix." + lines[0].split("-")[1]).toUpperCase());
+					//player.sendMessage(lines[0].split("-")[1].toUpperCase());
+					//ItemStack spe = new ItemStack(Material.BREAD,1);
+					//player.getInventory().addItem(spe);
 					/*ItemMeta spem = spe.getItemMeta();
 					spem.setDisplayName("§8[§7Epicube§8] §4Tuto Epicube");
 					spe.setItemMeta(spem);
@@ -134,8 +139,8 @@ public class Main extends JavaPlugin implements Listener {
 					inventory.addItem(new ItemStack[] { spe });
 					player.openInventory(inventory);*/
 
-				}
-			}
+				
+			//}
 		}
 	}
 
