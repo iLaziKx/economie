@@ -98,12 +98,16 @@ public class Main extends JavaPlugin implements Listener {
 	public void onSignChange(SignChangeEvent event) {
 		Player player = event.getPlayer();
 		String[] lines = event.getLines();
-		if (lines[0].equalsIgnoreCase("[Tuto Epicube]")) {
+		String item = "";
+		if(item != "") {
+			item = lines[0];
+		if (config.contains("prix." + item)) {
 			event.setLine(0, "");
-			event.setLine(1, "§8Epicube");
-			event.setLine(2, "§4Look mon stuf");
-			event.setLine(3, "");
+			event.setLine(1, item);
+			event.setLine(2, "§3Acheter du " + item);
+			event.setLine(3, "pour"+ config.getInt("prix." + item));
 			player.sendMessage("§8[§7Epicube§8] §3Panneau correctement creer !");
+		}
 		}
 	}
 
@@ -112,16 +116,18 @@ public class Main extends JavaPlugin implements Listener {
 		if (event.getClickedBlock().getState() instanceof Sign) {
 			Sign sign = (Sign) event.getClickedBlock().getState();
 			String[] lines = sign.getLines();
-			if (lines[1].equalsIgnoreCase("§8Epicube")) {
-				if (lines[2].equalsIgnoreCase("§4Look mon stuf")) {
+			if (lines[1].equalsIgnoreCase("§8Boulangerie")) {
+				if (lines[2].equalsIgnoreCase("§4Prend du pain")) {
 					Player player = event.getPlayer();
-					ItemStack spe = new ItemStack(Material.DIAMOND, 48);
-					ItemMeta spem = spe.getItemMeta();
+					ItemStack spe = new ItemStack(Material.BREAD, 1);
+					player.getInventory().addItem(spe);
+					/*ItemMeta spem = spe.getItemMeta();
 					spem.setDisplayName("§8[§7Epicube§8] §4Tuto Epicube");
 					spe.setItemMeta(spem);
 					inventory.addItem(new ItemStack[] { spe });
 					inventory.setItem(10, spe);
-					player.openInventory(inventory);
+					inventory.addItem(new ItemStack[] { spe });
+					player.openInventory(inventory);*/
 
 				}
 			}
