@@ -4,6 +4,7 @@ import java.util.logging.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
@@ -116,32 +117,19 @@ public class Main extends JavaPlugin implements Listener {
 		}
 	}
 
+	
 	@EventHandler
-	public void onPlayerInteract(PlayerInteractEvent event) {
-		if (event.getClickedBlock().getState() instanceof Sign) {
-			Sign sign = (Sign) event.getClickedBlock().getState();
-			Player player = event.getPlayer();
-			String[] lines = sign.getLines();
-			Material material = Material.getMaterial(getConfig().getString("prix." + lines[0].split("-")[1]).toUpperCase());
-			player.sendMessage("la");
-			
-			
-			//if (config.contains("prix." + lines[0].split("-")[1])) {
-					//Material material = Material.getMaterial(getConfig().getString("prix." + lines[0].split("-")[1]).toUpperCase());
-					//player.sendMessage(lines[0].split("-")[1].toUpperCase());
-					//ItemStack spe = new ItemStack(Material.BREAD,1);
-					//player.getInventory().addItem(spe);
-					/*ItemMeta spem = spe.getItemMeta();
-					spem.setDisplayName("§8[§7Epicube§8] §4Tuto Epicube");
-					spe.setItemMeta(spem);
-					inventory.addItem(new ItemStack[] { spe });
-					inventory.setItem(10, spe);
-					inventory.addItem(new ItemStack[] { spe });
-					player.openInventory(inventory);*/
-
-				
-			//}
-		}
+	public void onInteract(PlayerInteractEvent Event) {
+	  Player player = Event.getPlayer();
+	  Block block = Event.getClickedBlock();
+	  if(block.getState() instanceof Sign) {
+	  Sign sign = (Sign) block.getState();
+	  String line1 = sign.getLine(0);
+	  player.sendMessage(line1); 
+	  }
+	 
 	}
+		
+	
 
 }
