@@ -62,10 +62,10 @@ public class Main extends JavaPlugin implements Listener {
 		config.addDefault("prix.BREAD.name", "pain");
 		config.addDefault("prix.BREAD.prix", 2);
 		config.addDefault("prix.BREAD.quantite", 1);
-		config.addDefault("prix.CAKE_BLOCK.material", "CAKE_BLOCK");
-		config.addDefault("prix.CAKE_BLOCK.name", "gateau");
-		config.addDefault("prix.CAKE_BLOCK.prix", 20);
-		config.addDefault("prix.CAKE_BLOCK.quantite", 1);
+		config.addDefault("prix.CAKE.material", "CAKE_BLOCK");
+		config.addDefault("prix.CAKE.name", "gateau");
+		config.addDefault("prix.CAKE.prix", 20);
+		config.addDefault("prix.CAKE.quantite", 1);
 		config.addDefault("prix.POTATO.material", "POTATO");
 		config.addDefault("prix.POTATO.name", "patate");
 		config.addDefault("prix.POTATO.prix", 16);
@@ -79,7 +79,6 @@ public class Main extends JavaPlugin implements Listener {
 
 		log.info("[E-conomie] Le plugin est correctement charge !");
 		Bukkit.getServer().getPluginManager().registerEvents(this, this);
-		inventory = Bukkit.createInventory(null, 36, "§4ceci est un tuto");
 	}
 
 	public void onDisable() {
@@ -91,8 +90,8 @@ public class Main extends JavaPlugin implements Listener {
 		config.addDefault("compte." + p.getName(), 0);
 		config.options().copyDefaults(true);
 		saveConfig();
-		p.sendMessage(
-				"§8[§CE-conomie§8] §ABienvenue sur le serveur, vous avez " + config.getInt("compte." + p.getName()) + "€ sur votre compte");
+		p.sendMessage("§8[§CE-conomie§8] §ABienvenue sur le serveur, vous avez "
+				+ config.getInt("compte." + p.getName()) + "€ sur votre compte");
 	}
 
 	@EventHandler
@@ -105,15 +104,15 @@ public class Main extends JavaPlugin implements Listener {
 	public void onEntityDeath(EntityDeathEvent event) {
 
 		Entity e = event.getEntity();
-		double gain = 0;
 
 		if (e.getLastDamageCause() instanceof EntityDamageByEntityEvent) {
 			EntityDamageByEntityEvent nEvent = (EntityDamageByEntityEvent) e.getLastDamageCause();
-			Player player = (Player) nEvent.getDamager();
 			if (nEvent.getDamager() instanceof Player) {
+				Player player = (Player) nEvent.getDamager();
 				if (config.contains("gain." + e.getType().toString())) {
-					gain = config.getInt("gain." + e.getType().toString());
-					player.sendMessage("§8[§CE-conomie§8] §AVous avez tué un(e) " + e.getName() + " et gagné " + gain + "€");
+					double gain = config.getInt("gain." + e.getType().toString());
+					player.sendMessage(
+							"§8[§CE-conomie§8] §AVous avez tué un(e) " + e.getName() + " et gagné " + gain + "€");
 					int montant = config.getInt("compte." + player.getName());
 					config.set("compte." + player.getName(), montant + gain);
 					saveConfig();
@@ -155,11 +154,13 @@ public class Main extends JavaPlugin implements Listener {
 						Material material = Material.getMaterial(config.getString("prix." + item + ".material"));
 						ItemStack is = new ItemStack(material, config.getInt("prix." + item + ".quantite"));
 						double montant = config.getInt("compte." + player.getName());
-						config.set("compte." + player.getName(), (montant - config.getDouble("prix." + item + ".prix")));
+						config.set("compte." + player.getName(),
+								(montant - config.getDouble("prix." + item + ".prix")));
 						saveConfig();
 						player.getInventory().addItem(is);
-						player.sendMessage("§8[§CE-conomie§8] §AVous avez acheter " + config.getString("prix." + item + ".name") + " pour "
-								+ config.getString("prix." + item + ".prix") + " €");
+						player.sendMessage(
+								"§8[§CE-conomie§8] §AVous avez acheter " + config.getString("prix." + item + ".name")
+										+ " pour " + config.getString("prix." + item + ".prix") + " €");
 					} else {
 						player.sendMessage("§8[§CE-conomie§8] §CVous n'avez pas assez d'argent");
 					}
