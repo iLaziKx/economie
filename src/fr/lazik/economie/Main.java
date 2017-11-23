@@ -65,10 +65,10 @@ public class Main extends JavaPlugin implements Listener {
 		config.addDefault("prix.BREAD.name", "pain");
 		config.addDefault("prix.BREAD.prix", 2);
 		config.addDefault("prix.BREAD.quantite", 1);
-		config.addDefault("prix.CAKE_BLOCK.material", "CAKE_BLOCK");
-		config.addDefault("prix.CAKE_BLOCK.name", "gateau");
-		config.addDefault("prix.CAKE_BLOCK.prix", 20);
-		config.addDefault("prix.CAKE_BLOCK.quantite", 1);
+		config.addDefault("prix.CAKE.material", "CAKE_BLOCK");
+		config.addDefault("prix.CAKE.name", "gateau");
+		config.addDefault("prix.CAKE.prix", 20);
+		config.addDefault("prix.CAKE.quantite", 1);
 		config.addDefault("prix.POTATO.material", "POTATO");
 		config.addDefault("prix.POTATO.name", "patate");
 		config.addDefault("prix.POTATO.prix", 16);
@@ -82,7 +82,6 @@ public class Main extends JavaPlugin implements Listener {
 
 		log.info("[E-conomie] Le plugin est correctement charge !");
 		Bukkit.getServer().getPluginManager().registerEvents(this, this);
-		inventory = Bukkit.createInventory(null, 36, "§4ceci est un tuto");
 	}
 
 	public void onDisable() {
@@ -95,6 +94,8 @@ public class Main extends JavaPlugin implements Listener {
 		config.options().copyDefaults(true);
 		saveConfig();
 
+
+		
 		p.sendMessage("§8[§CE-conomie§8] §ABienvenue sur le serveur, vous avez "
 				+ config.getInt("compte." + p.getName()) + "€ sur votre compte");
 	}
@@ -109,15 +110,14 @@ public class Main extends JavaPlugin implements Listener {
 	public void onEntityDeath(EntityDeathEvent event) {
 
 		Entity e = event.getEntity();
-		double gain = 0;
 
 		if (e.getLastDamageCause() instanceof EntityDamageByEntityEvent) {
 			EntityDamageByEntityEvent nEvent = (EntityDamageByEntityEvent) e.getLastDamageCause();
-			Player player = (Player) nEvent.getDamager();
 			if (nEvent.getDamager() instanceof Player) {
+				Player player = (Player) nEvent.getDamager();
 				if (config.contains("gain." + e.getType().toString())) {
-					gain = config.getInt("gain." + e.getType().toString());
 
+					double gain = config.getInt("gain." + e.getType().toString());
 					player.sendMessage(
 							"§8[§CE-conomie§8] §AVous avez tué un(e) " + e.getName() + " et gagné " + gain + "€");
 					int montant = config.getInt("compte." + player.getName());
@@ -161,7 +161,6 @@ public class Main extends JavaPlugin implements Listener {
 						Material material = Material.getMaterial(config.getString("prix." + item + ".material"));
 						ItemStack is = new ItemStack(material, config.getInt("prix." + item + ".quantite"));
 						double montant = config.getInt("compte." + player.getName());
-
 						config.set("compte." + player.getName(),
 								(montant - config.getDouble("prix." + item + ".prix")));
 						saveConfig();
@@ -181,8 +180,23 @@ public class Main extends JavaPlugin implements Listener {
 	}
 
 	// les commandes
-	public boolean onCommand(CommandSender sender, Command cmd, String label, String args[]) {
-		Player player = (Player) sender;
+	public boolean onCommand(CommandSender sender, Command cmd, String label, String args[]) { // Ceci est obligatoire !
+																								// En tout cas si vous
+																								// désirez exécuter 1
+																								// commande ! Je ne
+																								// serai pas vraiment
+																								// vous expliquer ! J'en
+																								// est oublie la
+																								// véritable
+																								// signification et par
+																								// écrit c'est complique
+																								// !
+		Player player = (Player) sender; // Nous disons que lorsque nous marquerons : player.... ce seras le sender (Le
+		// joueur qui exécute la commande) qui a exécuter la commande ! Et que c'est
+		// un Player !
+		// String name = player.getName(); //Nous récupérons le pseudo du joueur !
+		// Lorsque nous écrirons "name" dans (Exemple) un message envoyé au joueur :
+		// "name" seras remplacer par le nom du sender !
 
 		if (label.equalsIgnoreCase("monCompte")) {
 			player.sendMessage("vous avez " + config.getInt("compte." + player.getName()) + "€ sur votre compte");
@@ -195,6 +209,7 @@ public class Main extends JavaPlugin implements Listener {
 
 					String pseudo = args[0];
 					Player player1 = getServer().getPlayer(pseudo);
+
 
 					if (!player.getName().equals(pseudo)) {
 						if (getServer().getPlayer(pseudo) != null) {
@@ -215,6 +230,7 @@ public class Main extends JavaPlugin implements Listener {
 							player.sendMessage("§8[§CE-conomie§8] §Cle joueur n'est pas connecte");
 						}
 						return true;
+
 					} else {
 						player.sendMessage("§8[§CE-conomie§8] §CVous ne pouvez pas vous envoyer d'argent");
 					}
