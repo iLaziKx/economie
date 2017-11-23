@@ -1,11 +1,14 @@
 package fr.lazik.economie;
 
 import java.util.logging.Logger;
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -113,6 +116,7 @@ public class Main extends JavaPlugin implements Listener {
 					double gain = config.getInt("gain." + e.getType().toString());
 					player.sendMessage(
 							"§8[§CE-conomie§8] §AVous avez tué un(e) " + e.getName() + " et gagné " + gain + "€");
+
 					int montant = config.getInt("compte." + player.getName());
 					config.set("compte." + player.getName(), montant + gain);
 					saveConfig();
@@ -172,4 +176,63 @@ public class Main extends JavaPlugin implements Listener {
 
 	}
 
+	// les commandes
+	public boolean onCommand(CommandSender sender, Command cmd, String label, String args[]) { // Ceci est obligatoire !
+																								// En tout cas si vous
+																								// désirez exécuter 1
+																								// commande ! Je ne
+																								// serai pas vraiment
+																								// vous expliquer ! J'en
+																								// est oublie la
+																								// véritable
+																								// signification et par
+																								// écrit c'est complique
+																								// !
+		Player player = (Player) sender; // Nous disons que lorsque nous marquerons : player.... ce seras le sender (Le
+		// joueur qui exécute la commande) qui a exécuter la commande ! Et que c'est
+		// un Player !
+		// String name = player.getName(); //Nous récupérons le pseudo du joueur !
+		// Lorsque nous écrirons "name" dans (Exemple) un message envoyé au joueur :
+		// "name" seras remplacer par le nom du sender !
+
+		if (label.equalsIgnoreCase("monCompte")) { // Nous disons que si le joueur écrit /bonjour il ce passe... Mais
+													// equalsignoreCase veut dire que nous pouvons écrire /bonjour
+													// /Bonjour /BoNjOuR etc çà marcheras ! Si nous avions marque :
+													// if(label.equals("Bonjour")) /bonjour /BoNjOuR etc ne marcherai
+													// pas ! Seul /Bonjour marcherai ! Complique a expliquer par écrit
+													// mais pour faire simple : equalsIgnoreCase ignore les majuscule !
+			player.sendMessage("vous avez " + config.getInt("compte." + player.getName()) + "€ sur votre compte");
+			return true;
+		} else if (label.equalsIgnoreCase("ePay")) {
+
+			double montant = Integer.parseInt(args[1]);
+			String pseudo = args[0];
+			Player player1 = getServer().getPlayer(pseudo);
+
+			if (!player.getName().equals(pseudo)) {
+				if (getServer().getPlayer(pseudo) != null) {
+					if (Double.compare(montant, config.getDouble("compte." + player.getName())) <= 0) {
+						config.set("compte." + player.getName(),
+								config.getDouble("compte." + player.getName()) - montant);
+						config.set("compte." + pseudo, config.getDouble("compte." + pseudo) + montant);
+						saveConfig();
+
+						player.sendMessage("vous avez envoyer " + Double.toString(montant) + "€ à " + pseudo);
+						player1.sendMessage("§8[§CE-conomie§8] §EVous avez reçu " + Double.toString(montant) + "€ de "
+								+ player.getName());
+					} else {
+						player.sendMessage("§8[§CE-conomie§8] §CVous n'avez pas assez d'argent");
+					}
+				} else {
+					player.sendMessage("§8[§CE-conomie§8] §Cle joueur n'est pas connecte");
+				}
+				return true;
+			} else {
+				player.sendMessage("§8[§CE-conomie§8] §CVous ne pouvez pas vous envoyer d'argent");
+			}
+			return true;
+		} else {
+			return false;
+		}
+	}
 }
