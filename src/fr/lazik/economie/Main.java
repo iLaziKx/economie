@@ -94,8 +94,6 @@ public class Main extends JavaPlugin implements Listener {
 		config.options().copyDefaults(true);
 		saveConfig();
 
-
-		
 		p.sendMessage("§8[§CE-conomie§8] §ABienvenue sur le serveur, vous avez "
 				+ config.getInt("compte." + p.getName()) + "€ sur votre compte");
 	}
@@ -180,23 +178,8 @@ public class Main extends JavaPlugin implements Listener {
 	}
 
 	// les commandes
-	public boolean onCommand(CommandSender sender, Command cmd, String label, String args[]) { // Ceci est obligatoire !
-																								// En tout cas si vous
-																								// désirez exécuter 1
-																								// commande ! Je ne
-																								// serai pas vraiment
-																								// vous expliquer ! J'en
-																								// est oublie la
-																								// véritable
-																								// signification et par
-																								// écrit c'est complique
-																								// !
-		Player player = (Player) sender; // Nous disons que lorsque nous marquerons : player.... ce seras le sender (Le
-		// joueur qui exécute la commande) qui a exécuter la commande ! Et que c'est
-		// un Player !
-		// String name = player.getName(); //Nous récupérons le pseudo du joueur !
-		// Lorsque nous écrirons "name" dans (Exemple) un message envoyé au joueur :
-		// "name" seras remplacer par le nom du sender !
+	public boolean onCommand(CommandSender sender, Command cmd, String label, String args[]) {
+		Player player = (Player) sender;
 
 		if (label.equalsIgnoreCase("monCompte")) {
 			player.sendMessage("vous avez " + config.getInt("compte." + player.getName()) + "€ sur votre compte");
@@ -209,7 +192,6 @@ public class Main extends JavaPlugin implements Listener {
 
 					String pseudo = args[0];
 					Player player1 = getServer().getPlayer(pseudo);
-
 
 					if (!player.getName().equals(pseudo)) {
 						if (getServer().getPlayer(pseudo) != null) {
@@ -243,9 +225,40 @@ public class Main extends JavaPlugin implements Listener {
 			}
 
 			return true;
+		} else if (label.equalsIgnoreCase("moreMoney")) {
+
+			try {
+				double somme = Integer.parseInt(args[0]);
+
+				String joueurGive;
+
+				if (args.length == 1) {
+					joueurGive = player.getName();
+				}
+
+				if (args.length == 2) {
+					joueurGive = args[1];
+				} else {
+					return false;
+
+				}
+				if (somme != 0) {
+					config.set("compte." + joueurGive, config.getDouble("compte." + joueurGive) + somme);
+					saveConfig();
+					player.sendMessage("§8[§CE-conomie§8] §C" + joueurGive + " à reçue " + somme + "€");
+					return true;
+				} else {
+					player.sendMessage("§8[§CE-conomie§8] §CLa valeur de la somme doit etre plus grand que 0");
+					return false;
+				}
+
+			} catch (NumberFormatException e) {
+				return false;
+			}
 		} else {
 			return false;
 		}
 
 	}
+
 }

@@ -8,4 +8,12 @@ commands:
   description: Mon argent !
  ePay:
   description: je te donne
-  usage: /ePay [joueur] [montant] 
+  usage: /ePay [joueur] [montant]
+ moreMoney:
+  description: donne de l'argent
+  usage: /moreMoney [joueur] [somme]
+  permission: permission.moreMoney 
+permission:
+ plugin.moreMoney:
+  description: etre op pour pouvoir faire cette commande
+  default: op
