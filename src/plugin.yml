@@ -3,3 +3,9 @@ name: E-conomie
 description: Creation d un plugin d economie
 author: MrLazik
 version: 0.0.1
+commands:
+ monCompte:
+  description: Mon argent !
+ ePay:
+  description: je te donne
+  usage: /ePay [joueur] [montant] 
