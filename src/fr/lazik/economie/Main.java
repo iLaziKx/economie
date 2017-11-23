@@ -96,8 +96,9 @@ public class Main extends JavaPlugin implements Listener {
 		config.addDefault("compte." + p.getName(), 0);
 		config.options().copyDefaults(true);
 		saveConfig();
-		p.sendMessage("§8[§CE-conomie§8] §ABienvenue sur le serveur, vous avez "
-				+ config.getInt("compte." + p.getName()) + "€ sur votre compte");
+
+		p.sendMessage(
+				"§8[§CE-conomie§8] §ABienvenue sur le serveur, vous avez " + config.getInt("compte." + p.getName()) + "€ sur votre compte");
 	}
 
 	@EventHandler
@@ -118,8 +119,8 @@ public class Main extends JavaPlugin implements Listener {
 			if (nEvent.getDamager() instanceof Player) {
 				if (config.contains("gain." + e.getType().toString())) {
 					gain = config.getInt("gain." + e.getType().toString());
-					player.sendMessage(
-							"§8[§CE-conomie§8] §AVous avez tué un(e) " + e.getName() + " et gagné " + gain + "€");
+
+					player.sendMessage("§8[§CE-conomie§8] §AVous avez tué un(e) " + e.getName() + " et gagné " + gain + "€");
 					int montant = config.getInt("compte." + player.getName());
 					config.set("compte." + player.getName(), montant + gain);
 					saveConfig();
@@ -161,13 +162,12 @@ public class Main extends JavaPlugin implements Listener {
 						Material material = Material.getMaterial(config.getString("prix." + item + ".material"));
 						ItemStack is = new ItemStack(material, config.getInt("prix." + item + ".quantite"));
 						double montant = config.getInt("compte." + player.getName());
-						config.set("compte." + player.getName(),
-								(montant - config.getDouble("prix." + item + ".prix")));
+
+						config.set("compte." + player.getName(), (montant - config.getDouble("prix." + item + ".prix")));
 						saveConfig();
 						player.getInventory().addItem(is);
-						player.sendMessage(
-								"§8[§CE-conomie§8] §AVous avez acheter " + config.getString("prix." + item + ".name")
-										+ " pour " + config.getString("prix." + item + ".prix") + " €");
+						player.sendMessage("§8[§CE-conomie§8] §AVous avez acheter " + config.getString("prix." + item + ".name") + " pour "
+								+ config.getString("prix." + item + ".prix") + " €");
 					} else {
 						player.sendMessage("§8[§CE-conomie§8] §CVous n'avez pas assez d'argent");
 					}
@@ -176,6 +176,7 @@ public class Main extends JavaPlugin implements Listener {
 			}
 
 		}
+
 	}
 
 	// les commandes
