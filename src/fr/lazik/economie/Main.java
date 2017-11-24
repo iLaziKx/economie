@@ -1,5 +1,6 @@
 package fr.lazik.economie;
 
+import java.util.ArrayList;
 import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
@@ -9,6 +10,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -23,6 +25,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class Main extends JavaPlugin implements Listener {
@@ -80,6 +83,24 @@ public class Main extends JavaPlugin implements Listener {
 		config.options().copyDefaults(true);
 		saveConfig();
 
+		ArrayList<String> locations = new ArrayList<String>();
+		ConfigurationSection cs = this.getConfig().getConfigurationSection("sign");
+
+		for (String key : cs.getKeys(false)) {
+			locations.add(config.getString("sign." + key + ".location"));
+			for (String location : locations) {
+				Integer x = Integer.parseInt(location.split(";")[0]);
+				Integer y = Integer.parseInt(location.split(";")[1]);
+				Integer z = Integer.parseInt(location.split(";")[2]);
+				String author = config.getString("sign." + key + ".author");
+				Block bloc = this.getServer().getWorld("world").getBlockAt(x, y, z);
+				bloc.setMetadata("E-conomie", new FixedMetadataValue(this, author));
+			}
+		}
+
+		log.info(locations.size() + " panneaux charge(s)");
+		log.info("[E-conomie] Chargement des markets termine!");
+
 		log.info("[E-conomie] Le plugin est correctement charge !");
 		Bukkit.getServer().getPluginManager().registerEvents(this, this);
 	}
@@ -94,8 +115,6 @@ public class Main extends JavaPlugin implements Listener {
 		config.options().copyDefaults(true);
 		saveConfig();
 
-
-		
 		p.sendMessage("§8[§CE-conomie§8] §ABienvenue sur le serveur, vous avez "
 				+ config.getInt("compte." + p.getName()) + "€ sur votre compte");
 	}
@@ -124,9 +143,7 @@ public class Main extends JavaPlugin implements Listener {
 					config.set("compte." + player.getName(), montant + gain);
 					saveConfig();
 				}
-
 			}
-
 		}
 	}
 
@@ -143,6 +160,16 @@ public class Main extends JavaPlugin implements Listener {
 				event.setLine(1, item);
 				event.setLine(2, "§1Du " + config.getString("prix." + item + ".name") + " pour");
 				event.setLine(3, "§1" + config.getInt("prix." + item + ".prix") + " €");
+
+				event.getBlock().setMetadata("E-conomie", new FixedMetadataValue(this, player.getName()));
+
+				config.set("sign." + event.getBlock().getX() + ";" + event.getBlock().getY() + ";"
+						+ event.getBlock().getZ() + ".author", player.getName());
+				config.set(
+						"sign." + event.getBlock().getX() + ";" + event.getBlock().getY() + ";"
+								+ event.getBlock().getZ() + ".location",
+						event.getBlock().getX() + ";" + event.getBlock().getY() + ";" + event.getBlock().getZ());
+				saveConfig();
 				player.sendMessage("§8[§CE-conomie§8] §APanneau correctement creer !");
 			}
 		}
@@ -154,22 +181,24 @@ public class Main extends JavaPlugin implements Listener {
 		if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
 			Block b = event.getClickedBlock();
 			if ((b.getType() == Material.SIGN_POST) || (b.getType() == Material.WALL_SIGN)) {
-				Sign s = (Sign) b.getState();
-				String item = s.getLine(1);
-				if (config.contains("prix." + item + ".material")) {
-					if (config.getInt("prix." + item + ".prix") <= config.getInt("compte." + player.getName())) {
-						Material material = Material.getMaterial(config.getString("prix." + item + ".material"));
-						ItemStack is = new ItemStack(material, config.getInt("prix." + item + ".quantite"));
-						double montant = config.getInt("compte." + player.getName());
-						config.set("compte." + player.getName(),
-								(montant - config.getDouble("prix." + item + ".prix")));
-						saveConfig();
-						player.getInventory().addItem(is);
-						player.sendMessage(
-								"§8[§CE-conomie§8] §AVous avez acheter " + config.getString("prix." + item + ".name")
-										+ " pour " + config.getString("prix." + item + ".prix") + " €");
-					} else {
-						player.sendMessage("§8[§CE-conomie§8] §CVous n'avez pas assez d'argent");
+				if (b.hasMetadata("E-conomie")) {
+					Sign s = (Sign) b.getState();
+					String item = s.getLine(1);
+					if (config.contains("prix." + item + ".material")) {
+						if (config.getInt("prix." + item + ".prix") <= config.getInt("compte." + player.getName())) {
+							Material material = Material.getMaterial(config.getString("prix." + item + ".material"));
+							ItemStack is = new ItemStack(material, config.getInt("prix." + item + ".quantite"));
+							double montant = config.getInt("compte." + player.getName());
+							config.set("compte." + player.getName(),
+									(montant - config.getDouble("prix." + item + ".prix")));
+							saveConfig();
+							player.getInventory().addItem(is);
+							player.sendMessage("§8[§CE-conomie§8] §AVous avez acheter "
+									+ config.getString("prix." + item + ".name") + " pour "
+									+ config.getString("prix." + item + ".prix") + " €");
+						} else {
+							player.sendMessage("§8[§CE-conomie§8] §CVous n'avez pas assez d'argent");
+						}
 					}
 				}
 
@@ -210,7 +239,6 @@ public class Main extends JavaPlugin implements Listener {
 					String pseudo = args[0];
 					Player player1 = getServer().getPlayer(pseudo);
 
-
 					if (!player.getName().equals(pseudo)) {
 						if (getServer().getPlayer(pseudo) != null) {
 							if (Double.compare(montant, config.getDouble("compte." + player.getName())) <= 0) {
@@ -219,7 +247,8 @@ public class Main extends JavaPlugin implements Listener {
 										config.getDouble("compte." + player.getName()) - montant);
 								config.set("compte." + pseudo, config.getDouble("compte." + pseudo) + montant);
 								saveConfig();
-								player.sendMessage("vous avez envoyer " + Double.toString(montant) + "€ à " + pseudo);
+								player.sendMessage("§8[§CE-conomie§8] §EVous avez envoyer " + Double.toString(montant)
+										+ "€ à " + pseudo);
 								player1.sendMessage("§8[§CE-conomie§8] §EVous avez reçu " + Double.toString(montant)
 										+ "€ de " + player.getName());
 
