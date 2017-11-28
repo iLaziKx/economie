@@ -80,12 +80,12 @@ public class Main extends JavaPlugin implements Listener {
 		config.addDefault("prix.experience.name", "experience");
 		config.addDefault("prix.experience.prix", 500);
 		config.addDefault("prix.experience.quantite", 1395);
+		config.createSection("sign");
 		config.options().copyDefaults(true);
 		saveConfig();
 
 		ArrayList<String> locations = new ArrayList<String>();
 		ConfigurationSection cs = this.getConfig().getConfigurationSection("sign");
-
 		for (String key : cs.getKeys(false)) {
 			locations.add(config.getString("sign." + key + ".location"));
 			for (String location : locations) {
@@ -111,12 +111,13 @@ public class Main extends JavaPlugin implements Listener {
 	@EventHandler // Ceci vas annoncer l'event ! (OBLIGATOIRE !)
 	public void onPlayerJoin(PlayerJoinEvent e) { // Nous annoncons le type d'event ! Par exemple : PlayerChatEvent...
 		Player p = e.getPlayer();
-		config.addDefault("compte." + p.getName(), 0);
+		config.addDefault("compte." + p.getName() + ".solde", 0);
+		config.addDefault("compte." + p.getName() + ".pseudo", p.getName());
 		config.options().copyDefaults(true);
 		saveConfig();
 
 		p.sendMessage("§8[§CE-conomie§8] §ABienvenue sur le serveur, vous avez "
-				+ config.getInt("compte." + p.getName()) + "€ sur votre compte");
+				+ config.getInt("compte." + p.getName()) + ".solde" + "€ sur votre compte");
 	}
 
 	@EventHandler
@@ -139,8 +140,8 @@ public class Main extends JavaPlugin implements Listener {
 					double gain = config.getInt("gain." + e.getType().toString());
 					player.sendMessage(
 							"§8[§CE-conomie§8] §AVous avez tué un(e) " + e.getName() + " et gagné " + gain + "€");
-					int montant = config.getInt("compte." + player.getName());
-					config.set("compte." + player.getName(), montant + gain);
+					int montant = config.getInt("compte." + player.getName() + ".solde");
+					config.set("compte." + player.getName() + ".solde", montant + gain);
 					saveConfig();
 				}
 			}
@@ -185,11 +186,12 @@ public class Main extends JavaPlugin implements Listener {
 					Sign s = (Sign) b.getState();
 					String item = s.getLine(1);
 					if (config.contains("prix." + item + ".material")) {
-						if (config.getInt("prix." + item + ".prix") <= config.getInt("compte." + player.getName())) {
+						if (config.getInt("prix." + item + ".prix") <= config
+								.getInt("compte." + player.getName() + ".solde")) {
 							Material material = Material.getMaterial(config.getString("prix." + item + ".material"));
 							ItemStack is = new ItemStack(material, config.getInt("prix." + item + ".quantite"));
-							double montant = config.getInt("compte." + player.getName());
-							config.set("compte." + player.getName(),
+							double montant = config.getInt("compte." + player.getName() + ".solde");
+							config.set("compte." + player.getName() + ".solde",
 									(montant - config.getDouble("prix." + item + ".prix")));
 							saveConfig();
 							player.getInventory().addItem(is);
@@ -214,7 +216,8 @@ public class Main extends JavaPlugin implements Listener {
 		Player player = (Player) sender;
 
 		if (label.equalsIgnoreCase("monCompte")) {
-			player.sendMessage("vous avez " + config.getInt("compte." + player.getName()) + "€ sur votre compte");
+			player.sendMessage(
+					"vous avez " + config.getInt("compte." + player.getName() + ".solde") + "€ sur votre compte");
 			return true;
 
 		} else if (label.equalsIgnoreCase("ePay")) {
@@ -226,18 +229,19 @@ public class Main extends JavaPlugin implements Listener {
 					Player player1 = getServer().getPlayer(pseudo);
 
 					if (!player.getName().equals(pseudo)) {
-						if (getServer().getPlayer(pseudo) != null) {
-							if (Double.compare(montant, config.getDouble("compte." + player.getName())) <= 0) {
+						if (getServer().getPlayer(pseudo) != null && config.getString("compte." + pseudo) != null) {
+							if (Double.compare(montant,
+									config.getDouble("compte." + player.getName() + ".solde")) <= 0) {
 
-								config.set("compte." + player.getName(),
-										config.getDouble("compte." + player.getName()) - montant);
-								config.set("compte." + pseudo, config.getDouble("compte." + pseudo) + montant);
+								config.set("compte." + player.getName() + ".solde",
+										config.getDouble("compte." + player.getName() + ".solde") - montant);
+								config.set("compte." + pseudo + ".solde",
+										config.getDouble("compte." + pseudo + ".solde") + montant);
 								saveConfig();
 								player.sendMessage("§8[§CE-conomie§8] §EVous avez envoyer " + Double.toString(montant)
 										+ "€ à " + pseudo);
 								player1.sendMessage("§8[§CE-conomie§8] §EVous avez reçu " + Double.toString(montant)
 										+ "€ de " + player.getName());
-
 							} else {
 								player.sendMessage("§8[§CE-conomie§8] §CVous n'avez pas assez d'argent");
 							}
@@ -245,11 +249,9 @@ public class Main extends JavaPlugin implements Listener {
 							player.sendMessage("§8[§CE-conomie§8] §Cle joueur n'est pas connecte");
 						}
 						return true;
-
 					} else {
 						player.sendMessage("§8[§CE-conomie§8] §CVous ne pouvez pas vous envoyer d'argent");
 					}
-
 				} catch (NumberFormatException e) {
 					return false;
 				}
@@ -258,34 +260,40 @@ public class Main extends JavaPlugin implements Listener {
 			}
 
 			return true;
-		} else if (label.equalsIgnoreCase("moreMoney")) {
+		} else if (label.equalsIgnoreCase("moreMoney") && player.isOp()) {
 
-			try {
-				double somme = Integer.parseInt(args[0]);
+			if (args.length != 0) {
+				try {
+					double somme = Integer.parseInt(args[0]);
+					String joueurGive;
+					if (args.length == 1) {
+						joueurGive = player.getName();
+					} else if (args.length == 2) {
+						joueurGive = args[1];
+						if (getServer().getPlayer(joueurGive) == null || config.getString("compte." + joueurGive) == null) {
+							player.sendMessage("§8[§CE-conomie§8] §Cle joueur n'est pas connecte");
+							return true;
+						}
+					} else {
+						return false;
+					}
 
-				String joueurGive;
+					if (somme != 0) {
+						config.set("compte." + joueurGive + ".solde",
+								config.getDouble("compte." + joueurGive + ".solde") + somme);
+						saveConfig();
+						player.sendMessage("§8[§CE-conomie§8] §C" + joueurGive + " à reçue " + somme + "€");
+						return true;
+					} else {
+						player.sendMessage("§8[§CE-conomie§8] §CLa valeur de la somme doit etre plus grand que 0");
+						return false;
+					}
 
-				if (args.length == 1) {
-					joueurGive = player.getName();
-				}
-
-				if (args.length == 2) {
-					joueurGive = args[1];
-				} else {
+				} catch (NumberFormatException e) {
 					return false;
-
 				}
-				if (somme != 0) {
-					config.set("compte." + joueurGive, config.getDouble("compte." + joueurGive) + somme);
-					saveConfig();
-					player.sendMessage("§8[§CE-conomie§8] §C" + joueurGive + " à reçue " + somme + "€");
-					return true;
-				} else {
-					player.sendMessage("§8[§CE-conomie§8] §CLa valeur de la somme doit etre plus grand que 0");
-					return false;
-				}
-
-			} catch (NumberFormatException e) {
+			} else {
+				log.info(args.toString());
 				return false;
 			}
 		} else {
