@@ -12,7 +12,12 @@ commands:
  moreMoney:
   description: donne de l'argent
   usage: /moreMoney [somme] [joueur]
-  permission: permission.moreMoney 
+  permission: permission.moreMoney
+ newPrime:
+  description: creer une nouvelle prime
+  usage: /newPrime [joueur] [somme]
+ prime:
+  discription: montre la prime en cours 
 permission:
  plugin.moreMoney:
   description: etre op pour pouvoir faire cette commande

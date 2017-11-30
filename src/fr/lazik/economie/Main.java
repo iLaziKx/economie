@@ -3,6 +3,7 @@ package fr.lazik.economie;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
+import org.apache.logging.log4j.core.pattern.EqualsIgnoreCaseReplacementConverter;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -27,6 +28,8 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import net.md_5.bungee.api.chat.TextComponent;
 
 public class Main extends JavaPlugin implements Listener {
 
@@ -117,7 +120,7 @@ public class Main extends JavaPlugin implements Listener {
 		saveConfig();
 
 		p.sendMessage("§8[§CE-conomie§8] §ABienvenue sur le serveur, vous avez "
-				+ config.getInt("compte." + p.getName()) + ".solde" + "€ sur votre compte");
+				+ config.getInt("compte." + p.getName() + ".solde" )+ "€ sur votre compte");
 	}
 
 	@EventHandler
@@ -214,13 +217,53 @@ public class Main extends JavaPlugin implements Listener {
 
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String args[]) {
 		Player player = (Player) sender;
-
-		if (label.equalsIgnoreCase("monCompte")) {
-			player.sendMessage(
-					"vous avez " + config.getInt("compte." + player.getName() + ".solde") + "€ sur votre compte");
+		TextComponent message = new TextComponent ( "Bonjour" ) ; 
+		
+		switch(label.toLowerCase()) {
+		case "moncompte":
+			player.sendMessage("vous avez " + config.getInt("compte." + player.getName() + ".solde") + "€ sur votre compte");
 			return true;
+			
+			
+		case "moremoney":
+			if (args.length != 0) {
+				try {
+					double somme = Integer.parseInt(args[0]);
+					String joueurGive;
+					if (args.length == 1) {
+						joueurGive = player.getName();
+					} else if (args.length == 2) {
+						joueurGive = args[1];
+						if (getServer().getPlayer(joueurGive) == null || config.getString("compte." + joueurGive) == null) {
+							player.sendMessage("§8[§CE-conomie§8] §Cle joueur n'est pas connecte");
+							return true;
+						}
+					} else {
+						return false;
+					}
 
-		} else if (label.equalsIgnoreCase("ePay")) {
+					if (somme != 0) {
+						config.set("compte." + joueurGive + ".solde",
+								config.getDouble("compte." + joueurGive + ".solde") + somme);
+						saveConfig();
+						player.sendMessage("§8[§CE-conomie§8] §C" + joueurGive + " à reçue " + somme + "€");
+						return true;
+					} else {
+						player.sendMessage("§8[§CE-conomie§8] §CLa valeur de la somme doit etre plus grand que 0");
+						return false;
+					}
+
+				} catch (NumberFormatException e) {
+					return false;
+				}
+			} else {
+				log.info(args.toString());
+				return false;
+			}
+			
+			
+			
+		case "epay":
 			if (args.length == 2) {
 				try {
 					double montant = Integer.parseInt(args[1]);
@@ -260,43 +303,48 @@ public class Main extends JavaPlugin implements Listener {
 			}
 
 			return true;
-		} else if (label.equalsIgnoreCase("moreMoney") && player.isOp()) {
-
-			if (args.length != 0) {
+		case "newprime":
+			if (args.length == 2) {
 				try {
-					double somme = Integer.parseInt(args[0]);
-					String joueurGive;
-					if (args.length == 1) {
-						joueurGive = player.getName();
-					} else if (args.length == 2) {
-						joueurGive = args[1];
-						if (getServer().getPlayer(joueurGive) == null || config.getString("compte." + joueurGive) == null) {
-							player.sendMessage("§8[§CE-conomie§8] §Cle joueur n'est pas connecte");
-							return true;
-						}
-					} else {
-						return false;
-					}
+					double montant = Integer.parseInt(args[1]);
 
-					if (somme != 0) {
-						config.set("compte." + joueurGive + ".solde",
-								config.getDouble("compte." + joueurGive + ".solde") + somme);
-						saveConfig();
-						player.sendMessage("§8[§CE-conomie§8] §C" + joueurGive + " à reçue " + somme + "€");
+					String pseudo = args[0];
+					Player player1 = getServer().getPlayer(pseudo);
+
+					//verifie que le joueur ne se met pas une prime
+					if (!player.getName().equals(pseudo)) {
+						
+						//verifie que le joueur existe
+						if (getServer().getPlayer(pseudo) != null && config.getString("compte." + pseudo) != null) {
+							//si il a de l'argent 
+							if (Double.compare(montant, config.getDouble("compte." + player.getName() + ".solde")) <= 0) {
+
+								Player lesJoueurs = new ArrayList<Player>();
+								lesJoueurs = (Player) getServer().getOnlinePlayers();
+								
+								saveConfig();
+								player.sendMessage("§8[§CE-conomie§8] §EVous avez envoyer " + Double.toString(montant) + "€ à " + pseudo);
+								player1.sendMessage("§8[§CE-conomie§8] §EVous avez reçu " + Double.toString(montant)
+										+ "€ de " + player.getName());
+							} else {
+								player.sendMessage("§8[§CE-conomie§8] §CVous n'avez pas assez d'argent");
+							}
+						} else {
+							player.sendMessage("§8[§CE-conomie§8] §Cle joueur n'est pas connecte");
+						}
 						return true;
 					} else {
-						player.sendMessage("§8[§CE-conomie§8] §CLa valeur de la somme doit etre plus grand que 0");
-						return false;
+						player.sendMessage("§8[§CE-conomie§8] §CVous ne pouvez pas vous envoyer d'argent");
 					}
-
 				} catch (NumberFormatException e) {
 					return false;
 				}
 			} else {
-				log.info(args.toString());
 				return false;
 			}
-		} else {
+			
+			
+		default:
 			return false;
 		}
 
