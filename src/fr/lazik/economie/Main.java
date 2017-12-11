@@ -3,7 +3,6 @@ package fr.lazik.economie;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
-import org.apache.logging.log4j.core.pattern.EqualsIgnoreCaseReplacementConverter;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -29,13 +28,12 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import net.md_5.bungee.api.chat.TextComponent;
-
 public class Main extends JavaPlugin implements Listener {
 
 	public static Inventory inventory;
 	public Logger log = (Logger) java.util.logging.Logger.getLogger("Minecraft");
 	FileConfiguration config = getConfig();
+	int taskId;
 
 	public void onEnable() {
 		config.addDefault("gain.ZOMBIE", 1);
@@ -120,7 +118,7 @@ public class Main extends JavaPlugin implements Listener {
 		saveConfig();
 
 		p.sendMessage("§8[§CE-conomie§8] §ABienvenue sur le serveur, vous avez "
-				+ config.getInt("compte." + p.getName() + ".solde" )+ "€ sur votre compte");
+				+ config.getInt("compte." + p.getName() + ".solde") + "€ sur votre compte");
 	}
 
 	@EventHandler
@@ -145,6 +143,21 @@ public class Main extends JavaPlugin implements Listener {
 							"§8[§CE-conomie§8] §AVous avez tué un(e) " + e.getName() + " et gagné " + gain + "€");
 					int montant = config.getInt("compte." + player.getName() + ".solde");
 					config.set("compte." + player.getName() + ".solde", montant + gain);
+					saveConfig();
+				} else if (config.getString("prime.recherche").equals(e.getName())) {
+					Bukkit.getScheduler().cancelTask(taskId);
+					config.set("compte." + player.getName() + ".solde",
+							config.getDouble("compte." + player.getName() + ".solde")
+									+ config.getDouble("prime.montant"));
+
+					for (Player unJoueur : getServer().getOnlinePlayers()) {
+						unJoueur.sendMessage("La prime de " + config.getDouble("prime.montant") + " pour la tête de "
+								+ config.getString("prime.recherche") + " a été gagné par " + player.getName());
+					}
+
+					config.set("prime.demandeur", "");
+					config.set("prime.recherche", "");
+					config.set("prime.montant", "");
 					saveConfig();
 				}
 			}
@@ -217,14 +230,22 @@ public class Main extends JavaPlugin implements Listener {
 
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String args[]) {
 		Player player = (Player) sender;
-		TextComponent message = new TextComponent ( "Bonjour" ) ; 
-		
-		switch(label.toLowerCase()) {
+
+		switch (label.toLowerCase()) {
 		case "moncompte":
-			player.sendMessage("vous avez " + config.getInt("compte." + player.getName() + ".solde") + "€ sur votre compte");
+			player.sendMessage(
+					"vous avez " + config.getInt("compte." + player.getName() + ".solde") + "€ sur votre compte");
 			return true;
-			
-			
+		case "showprime":
+			if (!config.getString("prime.demandeur").equals("")) {
+				player.sendMessage("Une prime de " + config.getString("prime.montant")
+						+ "€ est disponible pour la tête de " + config.getString("prime.recherche"));
+				return true;
+			} else {
+				player.sendMessage("Aucune prime n'est actuellement déposer!");
+				return true;
+			}
+
 		case "moremoney":
 			if (args.length != 0) {
 				try {
@@ -234,7 +255,8 @@ public class Main extends JavaPlugin implements Listener {
 						joueurGive = player.getName();
 					} else if (args.length == 2) {
 						joueurGive = args[1];
-						if (getServer().getPlayer(joueurGive) == null || config.getString("compte." + joueurGive) == null) {
+						if (getServer().getPlayer(joueurGive) == null
+								|| config.getString("compte." + joueurGive) == null) {
 							player.sendMessage("§8[§CE-conomie§8] §Cle joueur n'est pas connecte");
 							return true;
 						}
@@ -260,9 +282,7 @@ public class Main extends JavaPlugin implements Listener {
 				log.info(args.toString());
 				return false;
 			}
-			
-			
-			
+
 		case "epay":
 			if (args.length == 2) {
 				try {
@@ -310,22 +330,52 @@ public class Main extends JavaPlugin implements Listener {
 
 					String pseudo = args[0];
 					Player player1 = getServer().getPlayer(pseudo);
+					log.info("ici");
 
-					//verifie que le joueur ne se met pas une prime
+					// verifie que le joueur ne se met pas une prime
 					if (!player.getName().equals(pseudo)) {
-						
-						//verifie que le joueur existe
-						if (getServer().getPlayer(pseudo) != null && config.getString("compte." + pseudo) != null) {
-							//si il a de l'argent 
-							if (Double.compare(montant, config.getDouble("compte." + player.getName() + ".solde")) <= 0) {
 
-								Player lesJoueurs = new ArrayList<Player>();
-								lesJoueurs = (Player) getServer().getOnlinePlayers();
-								
-								saveConfig();
-								player.sendMessage("§8[§CE-conomie§8] §EVous avez envoyer " + Double.toString(montant) + "€ à " + pseudo);
-								player1.sendMessage("§8[§CE-conomie§8] §EVous avez reçu " + Double.toString(montant)
-										+ "€ de " + player.getName());
+						// verifie que le joueur existe
+						if (getServer().getPlayer(pseudo) != null && config.getString("compte." + pseudo) != null) {
+							// si il a de l'argent
+							if (Double.compare(montant,
+									config.getDouble("compte." + player.getName() + ".solde")) <= 0) {
+								if (config.getString("prime.demandeur").equals("")) {
+
+									config.set("prime.demandeur", player.getName());
+									config.set("prime.recherche", player1.getName());
+									config.set("prime.montant", montant);
+									config.set("compte." + config.getString("prime.demandeur") + ".solde",
+											config.getDouble("compte." + config.getString("prime.demandeur") + ".solde")
+													- config.getDouble("prime.montant"));
+									saveConfig();
+									taskId = getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+
+										public void run() {
+											for (Player unJoueur : getServer().getOnlinePlayers()) {
+												unJoueur.sendMessage("La prime à expirée!");
+											}
+											player1.sendMessage(
+													"Vous avez gagné la prime de " + config.getDouble("prime.montant")
+															+ "€ pour avoir survécu durant les 3 jours");
+											config.set("compte." + config.getString("prime.recherche") + ".solde",
+													config.getDouble(
+															"compte." + config.getString("prime.recherche") + ".solde")
+															+ config.getDouble("prime.montant"));
+											config.set("prime.demandeur", "");
+											config.set("prime.recherche", "");
+											config.set("prime.montant", "");
+											saveConfig();
+										}
+									}, 72000L);
+									for (Player unJoueur : getServer().getOnlinePlayers()) {
+										unJoueur.sendMessage(
+												"Une prime de " + montant + "€ à été placé sur " + player1.getName());
+									}
+								} else {
+									player.sendMessage("§8[§CE-conomie§8] §CUne prime existe déjà!");
+								}
+
 							} else {
 								player.sendMessage("§8[§CE-conomie§8] §CVous n'avez pas assez d'argent");
 							}
@@ -342,8 +392,7 @@ public class Main extends JavaPlugin implements Listener {
 			} else {
 				return false;
 			}
-			
-			
+
 		default:
 			return false;
 		}
